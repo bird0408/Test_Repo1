@@ -1,0 +1,87 @@
+import numpy as np
+import tensorflow as tf
+import tensorflow_datasets as tfds
+import matplotlib.pyplot as plt
+
+from tensorflow import keras
+
+import warnings
+warnings.filterwarnings("ignore")
+
+# โหลดรูปภาพต้นฉบับ
+img_path = r'C:\Users\DD-Y720-10\PycharmProjects\pythonProject2\input\cat_dog_pan_img\animals\cats\cats_00102.jpg'
+img = plt.imread(img_path)
+
+# แสดงรูปภาพต้นฉบับ
+plt.imshow(img)
+plt.axis('off')
+plt.title('Original Image')
+plt.show()
+
+def visualize(original, augmented, title_augmented):
+    fig = plt.figure()
+    plt.subplot(1,2,1)
+    plt.title('Original image')
+    plt.imshow(original)
+    plt.axis("off")
+
+    plt.subplot(1,2,2)
+    plt.title(title_augmented)
+    plt.imshow(augmented)
+    plt.axis("off")
+    plt.show()  # แสดงกราฟภาพ
+
+IMG_SIZE = 180
+resized = tf.image.resize(img, [IMG_SIZE, IMG_SIZE]) # [height, width]
+visualize(img, tf.cast(resized, tf.int32), 'Resized Image')
+
+rescaled = img / 255.0
+visualize(img, rescaled, 'Rescaled Image')
+
+print('Original IMG', '\n',img)
+print("\n", 'Rescaled IMG', '\n', rescaled)
+
+flipped = tf.image.flip_left_right(img)
+visualize(img, flipped, 'Flipped Image')
+
+grayscaled = tf.image.rgb_to_grayscale(img)
+visualize(img,  tf.squeeze(grayscaled), 'Grayscaled Image')
+
+contrasted = tf.image.adjust_contrast(img, 1.5)  # เพิ่มความคมชัด
+visualize(img, contrasted, 'Contrast Image')
+
+bright = tf.image.adjust_brightness(img, 0.3)
+visualize(img, bright, 'Brightened Image')
+
+cropped = tf.image.central_crop(img, central_fraction=0.7)
+visualize(img, cropped, 'Cropped Image')
+
+# ทำภาพเบลอ
+def blur_image(image):
+    return tf.nn.conv2d(image[tf.newaxis, ...], tf.ones((5, 5, 3, 3)) / 25, strides=1, padding='SAME')[0]
+
+# ทำเซ็นเซอร์
+def pixelate_image(image, pixel_size=9):
+    h, w, _ = image.shape
+    image = tf.image.resize(image, (h // pixel_size, w // pixel_size), method='nearest')
+    return tf.image.resize(image, (h, w), method='nearest')
+
+# เพิ่ม noise
+def add_noise(image, noise_factor=0.1):
+    noise = tf.random.normal(shape=tf.shape(image), mean=0.0, stddev=noise_factor, dtype=tf.float32)
+    return tf.clip_by_value(image + noise, 0.0, 1.0)
+
+# ปรับขนาดภาพและแปลงเป็น float32
+img_resized = tf.image.resize(img, [180, 180]) / 255.0
+
+# ทำภาพเบลอ
+blurred_img = blur_image(img_resized)
+visualize(img_resized, blurred_img, 'Blurred Image')
+
+# ทำเซ็นเซอร์
+pixelated_img = pixelate_image(img_resized)
+visualize(img_resized, pixelated_img, 'Pixelated Image')
+
+# เพิ่ม noise
+noisy_img = add_noise(img_resized)
+visualize(img_resized, noisy_img, 'Noisy Image')
